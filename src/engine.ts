@@ -22,7 +22,7 @@ const SCRIPT_DIR = path.normalize(path.dirname(fileURLToPath(import.meta.url)))
 const ASSETS_DIR = path.resolve(SCRIPT_DIR, '../assets')
 
 async function getProviderPlugin(name: string): Promise<faas.ProviderPlugin> {
-  const validProviders = ['aliyun', 'tencentyun', 'knative', 'aws', 'local', 'local-once']
+  const validProviders = ['aliyun', 'tencentyun', 'knative', 'aws', 'local', 'local-once','k8s']
 
   if (!validProviders.includes(name)) {
     throw new AppError(`no provider plugin found, name=${name}`)
