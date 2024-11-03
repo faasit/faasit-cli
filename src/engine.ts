@@ -108,6 +108,10 @@ export class Engine {
       throw new Error(`no application name, must provide it!`)
     }
 
+    if(app.output.defaultProvider.value.output.oss) {
+      process.env.OSS_PATH = app.output.defaultProvider.value.output.oss.path
+    }
+
     if (plugin.deploy) {
       await plugin.deploy({ app, provider }, this.getPluginRuntime(opts))
     }
