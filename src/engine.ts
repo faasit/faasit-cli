@@ -88,6 +88,9 @@ export class Engine {
 
     const projectDir = path.resolve(opts.workingDir, opts.name)
 
+    // projectDir to env
+    process.env.PROJECT_DIR = projectDir
+
     if ((await isDirectory(projectDir))) {
       throw new Error(`project ${opts.name} already exists`)
     }
@@ -108,8 +111,65 @@ export class Engine {
       throw new Error(`no application name, must provide it!`)
     }
 
+    // set env
+    if (process.env.PROJECT_DIR) {
+      const filePath = path.join(process.env.PROJECT_DIR, '.faasenv');
+      
+      // 检查 .faasenv 文件是否存在
+      if (fs.existsSync(filePath)) {
+        try {
+          // 读取 .faasenv 文件的内容
+          const fileContent = fs.readFileSync(filePath, 'utf8');
+          
+          // 将文件内容解析为 JSON 对象
+          const envVars = JSON.parse(fileContent);
+          
+          // 遍历 JSON 对象并将键值对设置到 process.env 中
+          Object.keys(envVars).forEach(key => {
+            process.env[key] = envVars[key];
+          });
+    
+          console.log('Environment variables loaded from .faasenv');
+        } catch (error) {
+          console.error('Failed to load .faasenv:', error);
+        }
+      } else {
+        console.log('.faasenv file does not exist in the PROJECT_DIR');
+      }
+    }
+
+    if(app.output.secret) {
+      for (const key in app.output.secret.value.output) {
+        if (app.output.secret.value.output.hasOwnProperty(key)) {
+          const value = app.output.secret.value.output[key];
+          process.env[`FAAS_${key}`] = value
+        }
+      }
+    }
+
     if(app.output.defaultProvider.value.output.oss) {
-      process.env.OSS_PATH = app.output.defaultProvider.value.output.oss.path
+      process.env.FAAS_OSS_BUCKET = app.output.defaultProvider.value.output.oss.bucket
+      process.env.FAAS_OSS_REGION = app.output.defaultProvider.value.output.oss.region
+    }
+
+    if (process.env.PROJECT_DIR) {
+      const filePath = path.join(process.env.PROJECT_DIR, '.faasenv');
+      
+      if (!fs.existsSync(filePath)) {
+        const faasEnv = Object.keys(process.env)
+          .filter(key => key.startsWith('FAAS'))
+          .reduce((obj: { [key: string]: string }, key) => {
+            obj[key] = process.env[key] as string; // 确保 process.env[key] 是字符串类型
+            return obj;
+          }, {} as { [key: string]: string });
+    
+        const envJson = JSON.stringify(faasEnv, null, 2);
+    
+        fs.writeFileSync(filePath, envJson, 'utf8');
+        console.log(`.faasenv file created at ${filePath}`);
+      } else {
+        console.log(`.faasenv file already exists at ${filePath}`);
+      }
     }
 
     if (plugin.deploy) {
