@@ -143,7 +143,7 @@ export async function main() {
     .option("--no-stdout", "disable printing into stdout")
     .option('--no-check-parse', 'not validate faasit DSL')
     .addOption(shared.devPerf)
-    .description('evaluate value and ir of faast DSL')
+    .description('evaluate value and ir of faasit DSL')
     .action(async (file, opts) => {
       const config = resolveConfigPath(file)
       await engine
@@ -159,7 +159,7 @@ export async function main() {
     .command('fmt')
     .argument('[file]', 'input file')
     .option('-p, --print', 'print into stdout')
-    .description('format faast DSL')
+    .description('format faasit DSL')
     .addOption(shared.devPerf)
     .action(async (file, opts) => {
       const config = resolveConfigPath(file)
@@ -205,7 +205,7 @@ export async function main() {
     .option('--no-check-parse', 'not validate faasit DSL')
     .option('--check-symbols', 'validate symbols for faasit DSL')
     .option('--no-lazy', 'no lazy evaluation for reference')
-    .description('evaluate value and ir of faast DSL')
+    .description('evaluate value and ir of faasit DSL')
     .action(async (file, opts) => {
       const config = resolveConfigPath(file)
       await engine
