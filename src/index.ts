@@ -91,6 +91,19 @@ export async function main() {
         workingDir: process.cwd(),
       }).catch(handleError)
     })
+  program
+    .command('build')
+    .description('build docker image for pku runtime')
+    .action(async (p) => {
+      const config = resolveConfigPath('')
+      await engine
+        .build({
+          config,
+          workingDir: process.cwd(),
+          ...p,
+        })
+        .catch(handleError)
+    })
 
   program
     .command('deploy')

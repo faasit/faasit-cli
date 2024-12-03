@@ -100,6 +100,15 @@ export class Engine {
     this.logger.info(`create project ${projectDir}`)
   }
 
+  async build(opts: { config: string; provider?: string } & GlobalOptions) {
+    const app = await this.resolveApplication(opts)
+    const provider = await this.handleGetProvider({ app, provider: opts.provider })
+    const plugin = await getProviderPlugin(provider.output.kind)
+    if (plugin.build) {
+      await plugin.build({ app, provider }, this.getPluginRuntime(opts))
+    }
+  }
+
   async deploy(opts: { config: string; provider?: string } & GlobalOptions) {
     const app = await this.resolveApplication(opts)
     const provider = await this.handleGetProvider({ app, provider: opts.provider })
