@@ -195,7 +195,7 @@ export class Engine {
       let err: unknown = null;
       for (let i = 0; i < maxRetriedTimes; ++i) {
         try {
-          await plugin.invoke({ app, funcName, input }, rt)
+          await plugin.invoke({ app, funcName, input,provider }, rt)
           err = null
           break
         } catch (e) {
