@@ -143,8 +143,9 @@ export async function main() {
     .option('-p, --provider [string]', 'deploy on given provider')
     .option('--example [int]', 'select example data', '0')
     .option('--retry [int]', 'retried times when error', '4')
+    .option('--file [string]', 'input file')
     .action(async (p) => {
-      const config = resolveConfigPath('')
+      const config = resolveConfigPath(p.file)
       await engine
         .invoke({ config, workingDir: process.cwd(), ...p })
         .catch(handleError)
