@@ -94,8 +94,9 @@ export async function main() {
   program
     .command('build')
     .description('build docker image for pku runtime')
+    .option('--file [string]', 'input file')
     .action(async (p) => {
-      const config = resolveConfigPath('')
+      const config = resolveConfigPath(p.file)
       await engine
         .build({
           config,
