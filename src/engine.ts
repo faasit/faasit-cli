@@ -100,12 +100,13 @@ export class Engine {
     this.logger.info(`create project ${projectDir}`)
   }
 
-  async build(opts: { config: string; provider?: string } & GlobalOptions) {
+  async build(opts: { config: string; provider?: string; registry?:string } & GlobalOptions) {
     const app = await this.resolveApplication(opts)
     const provider = await this.handleGetProvider({ app, provider: opts.provider })
     const plugin = await getProviderPlugin(provider.output.kind)
+    const registry = opts.registry
     if (plugin.build) {
-      await plugin.build({ app, provider }, this.getPluginRuntime(opts))
+      await plugin.build({ app, provider, registry }, this.getPluginRuntime(opts))
     }
   }
 

@@ -95,6 +95,7 @@ export async function main() {
     .command('build')
     .description('build docker image for pku runtime')
     .option('--file [string]', 'input file')
+    .option('--registry [string]', 'the registry to push image')
     .option('-p --provider [string]', 'provider name')
     .action(async (p) => {
       const config = resolveConfigPath(p.file)
