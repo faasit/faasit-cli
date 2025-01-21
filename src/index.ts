@@ -144,7 +144,7 @@ export async function main() {
     .description('invoke serverless function')
     .option('-f, --func [string]', 'function name')
     .option('-p, --provider [string]', 'deploy on given provider')
-    .option('--example [int]', 'select example data', '0')
+    .option('--example [int]', 'select example data')
     .option('--retry [int]', 'retried times when error', '4')
     .option('--file [string]', 'input file')
     .action(async (p) => {

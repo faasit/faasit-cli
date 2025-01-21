@@ -168,7 +168,7 @@ export class Engine {
     }
   }
 
-  async invoke(opts: { config: string; func?: string; provider?: string; example: number; retry: number } & GlobalOptions) {
+  async invoke(opts: { config: string; func?: string; provider?: string; example?: number; retry: number } & GlobalOptions) {
     const app = await this.resolveApplication(opts)
     const provider = await this.handleGetProvider({ app, provider: opts.provider })
     const plugin = await getProviderPlugin(provider.output.kind)
@@ -604,12 +604,13 @@ export class Engine {
     return provider
   }
 
-  async handleGetInputValue(opts: { rt: faas.ProviderPluginContext, app: faas.Application, inputValue?: string, example: number }) {
+  async handleGetInputValue(opts: { rt: faas.ProviderPluginContext, app: faas.Application, inputValue?: string, example?: number }) {
     // use input examples as default
-    let value = opts.app.output.inputExamples[opts.example]?.value
+    let value = undefined
     if (opts.inputValue) {
       value = JSON.parse(opts.inputValue)
-    } else {
+    } else if (opts.example) {
+      value = opts.app.output.inputExamples[opts.example]?.value
       value = await this.transformInputValue(value)
     }
 
