@@ -61,6 +61,16 @@ interface GlobalOptions {
   dev_perf: boolean
 }
 
+export interface InvocationResult {
+  isCold?: boolean
+  faasitBegin?: number
+  faasitEnd?: number
+  invokeBegin?: number
+  invokeEnd?: number
+  providerBegin?: number
+  providerEnd?: number
+}
+
 export class Engine {
   private logger: ft_utils.Logger
   constructor() {
@@ -152,7 +162,8 @@ export class Engine {
     }
   }
 
-  async invoke(opts: { config: string; func?: string; provider?: string; example: number; retry: number } & GlobalOptions) {
+  async invoke(opts: { config: string; func?: string; provider?: string; example: number; retry: number } & GlobalOptions): Promise<InvocationResult> {
+    let result: InvocationResult = {faasitBegin: Date.now()}
     const app = await this.resolveApplication(opts)
     const provider = await this.handleGetProvider({ app, provider: opts.provider })
     const plugin = await getProviderPlugin(provider.output.kind)
@@ -180,11 +191,26 @@ export class Engine {
       let err: unknown = null;
       for (let i = 0; i < maxRetriedTimes; ++i) {
         try {
-          await plugin.invoke({ app, funcName, input }, rt)
+          result.invokeBegin = Date.now()
+          const resp = await plugin.invoke({ app, funcName, input }, rt)
+          result.invokeEnd = Date.now()
           err = null
+          // get provider-side timestamp
+          if (resp != undefined){
+            try{
+              const jsonResp = JSON.parse(resp)
+              //console.log(jsonResp)
+              if (typeof jsonResp._cold === "boolean") result.isCold = jsonResp._cold
+              if (typeof jsonResp._begin === "number") result.providerBegin = jsonResp._begin
+              if (typeof jsonResp._end === "number") result.providerEnd = jsonResp._end 
+            } catch (e){
+              // ignore
+            }
+          }
           break
         } catch (e) {
           err = e;
+          console.log(`invoke ${funcName} finish with exception at ${Date.now()}`)
         }
 
         console.log(`retrying ... retried ${i}/${maxRetriedTimes} times`)
@@ -195,6 +221,8 @@ export class Engine {
         throw err
       }
     }
+    result.faasitEnd = Date.now()
+    return result
   }
 
   async devView(opts: { config: string, symbolTable: boolean } & GlobalOptions) {
