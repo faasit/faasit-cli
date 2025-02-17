@@ -22,7 +22,7 @@ const SCRIPT_DIR = path.normalize(path.dirname(fileURLToPath(import.meta.url)))
 const ASSETS_DIR = path.resolve(SCRIPT_DIR, '../assets')
 
 async function getProviderPlugin(name: string): Promise<faas.ProviderPlugin> {
-  const validProviders = ['aliyun', 'tencentyun', 'knative', 'aws', 'local', 'local-once']
+  const validProviders = ['aliyun', 'tencentyun', 'knative', 'aws', 'local','pku', 'local-once','k8s']
 
   if (!validProviders.includes(name)) {
     throw new AppError(`no provider plugin found, name=${name}`)
@@ -98,6 +98,7 @@ export class Engine {
 
     const projectDir = path.resolve(opts.workingDir, opts.name)
 
+
     if ((await isDirectory(projectDir))) {
       throw new Error(`project ${opts.name} already exists`)
     }
@@ -109,6 +110,16 @@ export class Engine {
     this.logger.info(`create project ${projectDir}`)
   }
 
+  async build(opts: { config: string; provider?: string; registry?:string } & GlobalOptions) {
+    const app = await this.resolveApplication(opts)
+    const provider = await this.handleGetProvider({ app, provider: opts.provider })
+    const plugin = await getProviderPlugin(provider.output.kind)
+    const registry = opts.registry
+    if (plugin.build) {
+      await plugin.build({ app, provider, registry }, this.getPluginRuntime(opts))
+    }
+  }
+
   async deploy(opts: { config: string; provider?: string } & GlobalOptions) {
     const app = await this.resolveApplication(opts)
     const provider = await this.handleGetProvider({ app, provider: opts.provider })
@@ -116,6 +127,11 @@ export class Engine {
 
     if (!app.$ir.name) {
       throw new Error(`no application name, must provide it!`)
+    }
+
+    if(app.output.defaultProvider.value.output.oss) {
+      process.env.FAAS_OSS_BUCKET = app.output.defaultProvider.value.output.oss.bucket
+      process.env.FAAS_OSS_REGION = app.output.defaultProvider.value.output.oss.region
     }
 
     if (plugin.deploy) {
@@ -192,7 +208,7 @@ export class Engine {
       for (let i = 0; i < maxRetriedTimes; ++i) {
         try {
           result.invokeBegin = Date.now()
-          const resp = await plugin.invoke({ app, funcName, input }, rt)
+          const resp = await plugin.invoke({ app, funcName, input, provider}, rt)
           result.invokeEnd = Date.now()
           err = null
           // get provider-side timestamp
@@ -616,12 +632,13 @@ export class Engine {
     return provider
   }
 
-  async handleGetInputValue(opts: { rt: faas.ProviderPluginContext, app: faas.Application, inputValue?: string, example: number }) {
+  async handleGetInputValue(opts: { rt: faas.ProviderPluginContext, app: faas.Application, inputValue?: string, example?: number }) {
     // use input examples as default
-    let value = opts.app.output.inputExamples[opts.example]?.value
+    let value = undefined
     if (opts.inputValue) {
       value = JSON.parse(opts.inputValue)
-    } else {
+    } else if (opts.example) {
+      value = opts.app.output.inputExamples[opts.example]?.value
       value = await this.transformInputValue(value)
     }
 

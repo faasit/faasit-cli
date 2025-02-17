@@ -91,6 +91,22 @@ export async function main() {
         workingDir: process.cwd(),
       }).catch(handleError)
     })
+  program
+    .command('build')
+    .description('build docker image for pku runtime')
+    .option('--file [string]', 'input file')
+    .option('--registry [string]', 'the registry to push image')
+    .option('-p --provider [string]', 'provider name')
+    .action(async (p) => {
+      const config = resolveConfigPath(p.file)
+      await engine
+        .build({
+          config,
+          workingDir: process.cwd(),
+          ...p,
+        })
+        .catch(handleError)
+    })
 
   program
     .command('deploy')
@@ -128,10 +144,11 @@ export async function main() {
     .description('invoke serverless function')
     .option('-f, --func [string]', 'function name')
     .option('-p, --provider [string]', 'deploy on given provider')
-    .option('--example [int]', 'select example data', '0')
+    .option('--example [int]', 'select example data')
     .option('--retry [int]', 'retried times when error', '4')
+    .option('--file [string]', 'input file')
     .action(async (p) => {
-      const config = resolveConfigPath('')
+      const config = resolveConfigPath(p.file)
       await engine
         .invoke({ config, workingDir: process.cwd(), ...p })
         .catch(handleError)
@@ -143,7 +160,7 @@ export async function main() {
     .option("--no-stdout", "disable printing into stdout")
     .option('--no-check-parse', 'not validate faasit DSL')
     .addOption(shared.devPerf)
-    .description('evaluate value and ir of faast DSL')
+    .description('evaluate value and ir of faasit DSL')
     .action(async (file, opts) => {
       const config = resolveConfigPath(file)
       await engine
@@ -159,7 +176,7 @@ export async function main() {
     .command('fmt')
     .argument('[file]', 'input file')
     .option('-p, --print', 'print into stdout')
-    .description('format faast DSL')
+    .description('format faasit DSL')
     .addOption(shared.devPerf)
     .action(async (file, opts) => {
       const config = resolveConfigPath(file)
@@ -205,7 +222,7 @@ export async function main() {
     .option('--no-check-parse', 'not validate faasit DSL')
     .option('--check-symbols', 'validate symbols for faasit DSL')
     .option('--no-lazy', 'no lazy evaluation for reference')
-    .description('evaluate value and ir of faast DSL')
+    .description('evaluate value and ir of faasit DSL')
     .action(async (file, opts) => {
       const config = resolveConfigPath(file)
       await engine
