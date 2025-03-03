@@ -69,6 +69,7 @@ export interface InvocationResult {
   invokeEnd?: number
   providerBegin?: number
   providerEnd?: number
+  cpu?: number
 }
 
 export class Engine {
@@ -219,6 +220,7 @@ export class Engine {
               if (typeof jsonResp._cold === "boolean") result.isCold = jsonResp._cold
               if (typeof jsonResp._begin === "number") result.providerBegin = jsonResp._begin
               if (typeof jsonResp._end === "number") result.providerEnd = jsonResp._end 
+              if (typeof jsonResp._cpu === "number") result.cpu = jsonResp._cpu
             } catch (e){
               // ignore
             }
