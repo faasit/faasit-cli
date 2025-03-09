@@ -22,7 +22,7 @@ const SCRIPT_DIR = path.normalize(path.dirname(fileURLToPath(import.meta.url)))
 const ASSETS_DIR = path.resolve(SCRIPT_DIR, '../assets')
 
 async function getProviderPlugin(name: string): Promise<faas.ProviderPlugin> {
-  const validProviders = ['aliyun', 'tencentyun', 'knative', 'aws', 'local','pku', 'local-once','k8s']
+  const validProviders = ['aliyun', 'tencentyun', 'knative', 'aws', 'local', 'pku', 'local-once', 'k8s']
 
   if (!validProviders.includes(name)) {
     throw new AppError(`no provider plugin found, name=${name}`)
@@ -69,7 +69,7 @@ export interface InvocationResult {
   invokeEnd?: number
   providerBegin?: number
   providerEnd?: number
-  cpu?: number
+  returnResult?: number
 }
 
 export class Engine {
@@ -111,7 +111,7 @@ export class Engine {
     this.logger.info(`create project ${projectDir}`)
   }
 
-  async build(opts: { config: string; provider?: string; registry?:string } & GlobalOptions) {
+  async build(opts: { config: string; provider?: string; registry?: string } & GlobalOptions) {
     const app = await this.resolveApplication(opts)
     const provider = await this.handleGetProvider({ app, provider: opts.provider })
     const plugin = await getProviderPlugin(provider.output.kind)
@@ -130,7 +130,7 @@ export class Engine {
       throw new Error(`no application name, must provide it!`)
     }
 
-    if(app.output.defaultProvider.value.output.oss) {
+    if (app.output.defaultProvider.value.output.oss) {
       process.env.FAAS_OSS_BUCKET = app.output.defaultProvider.value.output.oss.bucket
       process.env.FAAS_OSS_REGION = app.output.defaultProvider.value.output.oss.region
     }
@@ -180,7 +180,7 @@ export class Engine {
   }
 
   async invoke(opts: { config: string; func?: string; provider?: string; example: number; retry: number } & GlobalOptions): Promise<InvocationResult> {
-    let result: InvocationResult = {faasitBegin: Date.now()}
+    let result: InvocationResult = { faasitBegin: Date.now() }
     const app = await this.resolveApplication(opts)
     const provider = await this.handleGetProvider({ app, provider: opts.provider })
     const plugin = await getProviderPlugin(provider.output.kind)
@@ -202,26 +202,26 @@ export class Engine {
           funcName = app.output.functions[0].value.$ir.name
         }
       }
-      
+
       const maxRetriedTimes = opts.retry || 1
 
       let err: unknown = null;
       for (let i = 0; i < maxRetriedTimes; ++i) {
         try {
           result.invokeBegin = Date.now()
-          const resp = await plugin.invoke({ app, funcName, input, provider}, rt)
+          const resp = await plugin.invoke({ app, funcName, input, provider }, rt)
           result.invokeEnd = Date.now()
           err = null
           // get provider-side timestamp
-          if (resp != undefined){
-            try{
+          if (resp != undefined) {
+            try {
               const jsonResp = JSON.parse(resp)
               //console.log(jsonResp)
               if (typeof jsonResp._cold === "boolean") result.isCold = jsonResp._cold
               if (typeof jsonResp._begin === "number") result.providerBegin = jsonResp._begin
-              if (typeof jsonResp._end === "number") result.providerEnd = jsonResp._end 
-              if (typeof jsonResp._cpu === "number") result.cpu = jsonResp._cpu
-            } catch (e){
+              if (typeof jsonResp._end === "number") result.providerEnd = jsonResp._end
+              if (typeof jsonResp._return === "number") result.returnResult = jsonResp._return
+            } catch (e) {
               // ignore
             }
           }
