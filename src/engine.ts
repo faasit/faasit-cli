@@ -70,6 +70,10 @@ export interface InvocationResult {
   providerBegin?: number
   providerEnd?: number
   returnResult?: number
+  cpuUsage?: number
+  logicalCores?: number
+  memoryUsage?: number
+  peakMemoryUsage?: number
 }
 
 export class Engine {
@@ -221,6 +225,10 @@ export class Engine {
               if (typeof jsonResp._begin === "number") result.providerBegin = jsonResp._begin
               if (typeof jsonResp._end === "number") result.providerEnd = jsonResp._end
               if (typeof jsonResp._return === "number") result.returnResult = jsonResp._return
+              if (typeof jsonResp._cpu_usage === "number") result.cpuUsage = jsonResp._cpu_usage
+              if (typeof jsonResp._logical_cores === "number") result.logicalCores = jsonResp._logical_cores
+              if (typeof jsonResp._mem_usage === "number") result.memoryUsage = jsonResp._mem_usage
+              if (typeof jsonResp._max_mem_usage === "number") result.peakMemoryUsage = jsonResp._max_mem_usage
             } catch (e) {
               // ignore
             }
