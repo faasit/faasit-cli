@@ -183,12 +183,7 @@ export class Engine {
     if (plugin.invoke) {
       let funcName = opts.func
       if (!funcName) {
-        if (faas.isWorkflowApplication(app)) {
-          funcName = "__executor"
-        } else {
-          // get first function
-          funcName = app.output.functions[0].value.$ir.name
-        }
+        funcName = app.output.workflow? app.output.workflow.value.$ir.name : app.output.functions[0].value.$ir.name
       }
       
       const maxRetriedTimes = opts.retry || 1
