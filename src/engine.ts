@@ -183,7 +183,7 @@ export class Engine {
     }
   }
 
-  async invoke(opts: { config: string; func?: string; provider?: string; example: number; retry: number } & GlobalOptions): Promise<InvocationResult> {
+  async invoke(opts: { config: string; func?: string; provider?: string; example: number; retry: number; inputValue?: string } & GlobalOptions): Promise<InvocationResult> {
     let result: InvocationResult = { faasitBegin: Date.now() }
     const app = await this.resolveApplication(opts)
     const provider = await this.handleGetProvider({ app, provider: opts.provider })
@@ -193,6 +193,7 @@ export class Engine {
     const input = await this.handleGetInputValue({
       rt,
       app,
+      inputValue: opts.inputValue,
       example: opts.example
     })
 
